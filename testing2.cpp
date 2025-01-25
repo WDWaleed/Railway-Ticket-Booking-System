@@ -4,20 +4,24 @@
 #include <string.h>
 using namespace std;
 
+// Replace number of seats with number of passengers as per the problem statement
+// Show success message when ticket is booked successfully
+// Remove that change in color for invalid input because it's inconsitent
+
 void separator();
 void display_schedules(int, char trains[], int stops[], string schedules[4][10][3]);
-void book_tickets(string schedules[4][10][3], char trains[], int available_berths[], string passengers_data[40][7], int passengers);
-void view_ticket(string passengers[40][7]);
+void book_tickets(string schedules[4][10][3], char trains[], int available_seats[], string passengers_data[40][7], int passengers);
+void view_ticket(string passengers_data[40][7]);
 
 int main()
 {
     int n = 4; // Number of trains
     char trains[n] = {'A', 'B', 'C', 'D'};
     string departure[n] = {"05:00", "10:00", "16:00", "21:00"};
-    int available_berths[n] = {40, 40, 40, 40};
+    int available_seats[n] = {40, 40, 40, 40};
     int stops[] = {7, 7, 9, 9}; // Number of places the trains are going to stop at as shown in the following array. Each entry corresponds to trains[i]
 
-    // The passengers array holds all the data about a passenger such as name, boarding station, destination station, number of berths booked, train name, departure time, and price
+    // The passengers array holds all the data about a passenger such as name, boarding station, destination station, number of seats booked, train name, departure time, and price
     int passengers = 0;
     string passengers_data[40][7];
 
@@ -75,10 +79,14 @@ int main()
     while (true)
     {
         cout << "=> Press 1 to view train schedules" << endl;
+        Sleep(500);
         cout << "=> Press 2 to book tickets" << endl;
+        Sleep(500);
         cout << "=> Press 3 to view your ticket" << endl;
+        Sleep(500);
         cout << "=> Press 0 to exit" << endl
              << endl;
+        Sleep(500);
         cout << "Enter your choice: ";
         cin >> choice;
 
@@ -90,7 +98,7 @@ int main()
             system("cls");
             system("Color 0C");
             cout << "Invalid Input! Try Again!";
-            Sleep(1000);
+            Sleep(2000);
             system("cls");
             system("Color 07");
             continue;
@@ -106,7 +114,22 @@ int main()
         }
         else if (choice == 2)
         {
-            book_tickets(schedules, trains, available_berths, passengers_data, passengers);
+            book_tickets(schedules, trains, available_seats, passengers_data, passengers);
+        }
+        else if (choice == 3)
+        {
+            view_ticket(passengers_data);
+        }
+
+        else
+        {
+            system("cls");
+            system("Color 0C");
+            cout << "Invalid Input! Try Again!";
+            Sleep(2000);
+            system("cls");
+            system("Color 07");
+            continue;
         }
         char show_menu;
         cout << "Return to menu? (y/n): ";
@@ -148,7 +171,9 @@ void display_schedules(int n, char trains[], int stops[], string schedules[4][10
         }
     }
     separator();
-    cout << setw(20) << left << "Station" << setw(20) << left << "Departure Time" << endl;
+    Sleep(500);
+    cout << setw(20) << left << "Station" << setw(20) << left << "Departure Time" << endl
+         << endl;
     for (int i = 0; i < stops[tindex]; i++)
     {
         cout << setw(20) << left << schedules[tindex][i][0] << setw(20) << left << schedules[tindex][i][1] << endl;
@@ -158,35 +183,15 @@ void display_schedules(int n, char trains[], int stops[], string schedules[4][10
     separator();
 }
 
-void book_tickets(string schedules[4][10][3], char trains[], int available_berths[], string passengers_data[40][7], int passengers)
+void book_tickets(string schedules[4][10][3], char trains[], int available_seats[], string passengers_data[40][7], int passengers)
 {
-    string boarding_station, destination_station, departure_time;
-    int berths, price;
+    string boarding_station, destination_station, booked_train, name;
+    int boarding_index = -1, destination_index = -1, seats = 0, train_index, ticket_price;
 
     cout << "Enter boarding station: ";
     cin >> boarding_station;
     cout << "Enter destination station: ";
     cin >> destination_station;
-
-    while (true)
-    {
-        cout << "Enter number of berths: ";
-        cin >> berths;
-        if (berths <= 0)
-        {
-            cout << "Enter valid number of berths!" << endl;
-        }
-        else
-        {
-            break;
-        }
-    }
-
-    // Here I'm going to search through the schedules of each of the trains and find the one that has the boarding and destination stations in its route. Note that for the train to be selected it is imperative that the boarding station has an index less than that of the destination station.
-
-    int boarding_index, destination_index; // Indices of the respective stations along the train's route
-    char booked_train;
-
     for (int i = 0; i < 4; i++)
     {
         for (int j = 0; j < 10; j++)
@@ -195,78 +200,104 @@ void book_tickets(string schedules[4][10][3], char trains[], int available_berth
             {
                 boarding_index = j;
             }
-            else if (destination_station == schedules[i][j][0])
+            if (destination_station == schedules[i][j][0])
             {
                 destination_index = j;
             }
         }
-        if (destination_index - boarding_index > 0)
+        if (boarding_index != -1 && destination_index != -1 && boarding_index < destination_index)
         {
-            if (available_berths[i] > 0)
+            booked_train = string(1, trains[i]);
+            train_index = i;
+            break;
+        }
+    }
+    if (boarding_index != -1 && destination_index != -1 && boarding_index < destination_index)
+    {
+        while (true)
+        {
+            cout << "Enter number of seats: ";
+            cin >> seats;
+            if (seats > 0)
             {
-                if (berths <= available_berths[i])
-                {
-                    booked_train = trains[i];
-                    departure_time = schedules[i][boarding_index][1];
-                    price = berths * stoi(schedules[i][destination_index][2]) - stoi(schedules[i][boarding_index][2]);
-                    available_berths[i] -= berths;
-                    break;
-                }
-                else
-                {
-                    char book_or_not;
-                    cout << "Sorry, there are only " << available_berths[i] << " available. Do you wish to book them?" << endl;
-                    cout << "Enter your choice (y/n): ";
-                    cin >> book_or_not;
-                    book_or_not = tolower(book_or_not);
-                    if (book_or_not == 'y')
-                    {
-                        book_tickets(schedules, trains, available_berths, passengers_data, passengers);
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
+                break;
             }
             else
             {
-                cout << "Sorry, no berths available for the entered boarding and destination stations" << endl;
+                cout << "Invalid input!" << endl;
             }
+        }
+
+        // Check availability of seats
+        if (seats <= available_seats[train_index])
+        {
+            cout << "Enter your name: ";
+            cin >> name;
+            cout << endl;
+            available_seats[train_index] -= seats;
+            ticket_price = seats * (stoi(schedules[train_index][destination_index][2]) - stoi(schedules[train_index][boarding_index][2]));
+
+            // Entering data to passengers array
+            passengers_data[passengers][0] = name;
+            passengers_data[passengers][1] = boarding_station;
+            passengers_data[passengers][2] = destination_station;
+            passengers_data[passengers][3] = booked_train;
+            passengers_data[passengers][4] = schedules[train_index][0][1];
+            passengers_data[passengers][5] = to_string(seats);
+            passengers_data[passengers][6] = to_string(ticket_price);
+            passengers++;
+            cout << "Ticket booked successfully!" << endl;
         }
         else
         {
-            cout << "Sorry, no trains are available for the entered boarding and destination stations" << endl;
+            cout << "Sorry, only " << available_seats[train_index] << " seats are available." << endl
+                 << endl;
         }
     }
-
-    // If tickets were successfully booked, update the passenger's data in the passenger array
-    if (booked_train)
+    else
     {
-        string name;
-        cout << "Enter your name: ";
-        cin.ignore(1000, '\n');
-        getline(cin, name);
-
-        // Index of a particular passenger in the passenger data array:
-        int i = passengers;
-        // The passengers array holds all the data about a passenger such as name, boarding station, destination station, number of berths booked, train name, departure time, and price
-
-        // Passenger's Name:
-        passengers_data[i][0] = name;
-        // Boarding Station:
-        passengers_data[i][1] = boarding_station;
-        // Destination Station:
-        passengers_data[i][2] = destination_station;
-        // Boarding Station:
-        passengers_data[i][3] = berths;
-        // Boarding Station:
-        passengers_data[i][4] = booked_train;
-        // Boarding Station:
-        passengers_data[i][5] = departure_time;
-        // Boarding Station:
-        passengers_data[i][6] = price;
+        cout << "Sorry, no trains found for the entered route" << endl
+             << endl;
     }
 }
 
-void view_ticket(string passengers[40][7]) {}
+void view_ticket(string passengers_data[40][7])
+{
+    string name = "";
+    cout << "Enter passenger name: ";
+    cin >> name;
+
+    int passenger_index = -1;
+    for (int i = 0; i < 40; i++)
+    {
+        if (name == passengers_data[i][0])
+        {
+            passenger_index = i;
+            break;
+        }
+    }
+
+    if (passenger_index == -1)
+    {
+        cout << name << " was not found in the list of passengers" << endl;
+    }
+
+    separator();
+    Sleep(500);
+    cout << setw(25) << left << "Name" << setw(10) << "|" << setw(25) << left << passengers_data[passenger_index][0] << endl;
+    Sleep(500);
+    cout << setw(25) << left << "Boarding Station" << setw(10) << "|" << setw(25) << left << passengers_data[passenger_index][1] << endl;
+    Sleep(500);
+    cout << setw(25) << left << "Destination Station" << setw(10) << "|" << setw(25) << left << passengers_data[passenger_index][2] << endl;
+    Sleep(500);
+    cout << setw(25) << left << "Train Name" << setw(10) << "|" << setw(25) << left << passengers_data[passenger_index][3] << endl;
+    Sleep(500);
+    cout << setw(25) << left << "Departure Time" << setw(10) << "|" << setw(25) << left << passengers_data[passenger_index][4] << endl;
+    Sleep(500);
+    cout << setw(25) << left << "Ticket Price" << setw(10) << "|" << setw(25) << left << passengers_data[passenger_index][5] << endl;
+    Sleep(500);
+    cout << setw(25) << left << "Number of Seats" << setw(10) << "|" << setw(25) << left << passengers_data[passenger_index][6] << endl;
+    separator();
+
+    // The passengers array holds all the data about a passenger such as name, boarding station, destination station, number of seats booked, train name, departure time, and price
+}

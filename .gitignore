@@ -1,2 +1,4 @@
 *.pdf
 *.jpg
+*.exe
+testing.cpp
